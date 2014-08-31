@@ -1,0 +1,117 @@
+<project name="autoBuild" default="main" basedir=".">
+	<property name="project.dir" value="${basedir}/project"/>
+	<property name="project.src" value="src"/>
+	<property name="project.bin" value="bin"/>
+	<property name="project.classes" value="classes"/>
+	<property name="out.dir" value="out"/>
+	
+	<property name="project_repository_url" value=""/>
+	<property name="mail_to" value="792793182@qq.com, leleliu008@gmail.com" />
+	<property name="findbugs.home" value="${basedir}/libs/findbugs-3.0.0-dev-20131204-e3cbbd5"/>
+	<property name="java.home" value="/home/leleliu008/bin/jdk1.7.0_45"/>
+	<property name="android.sdk.home" value="/home/leleliu008/bin/android/sdk"/>
+	
+	
+	<target name="main" depends="mailto" description="构建脚本的入口"/>
+	
+	<target name="mailto" depends="findbugs" description="发邮件">
+		<!-- 必须先将${basedir}/libs/javamail-1.4.7/mail.jar加入CLASSPATH环境变量中-->
+        <mail
+			from="792793182@qq.com"
+            tolist="${mail_to}"
+            mailhost="smtp.qq.com"
+            user="username"
+            password="password"
+            subject="Daily build"
+            message="mail content"
+			messagemimetype="text/html">
+            <fileset
+            	dir="${basedir}/${out.dir}"
+            	erroronmissingdir="false"
+            	description="附件列表">
+            	<include name="*.*"/>
+            </fileset>
+        </mail>
+	</target>
+	
+	<target name="findbugs" depends="compile" description="使用FindBugs进行代码静态扫描">
+		<path id="findbugs-ant.classpath">
+			<pathelement location="${findbugs.home}/lib/findbugs-ant.jar"/>
+		</path>
+		
+		<taskdef
+			name="findbugs"
+			classname="edu.umd.cs.findbugs.anttask.FindBugsTask"
+			classpathref="findbugs-ant.classpath"/>
+		
+		<findbugs
+			home="${findbugs.home}"
+		    output="html"
+		    outputFile="${basedir}/${out.dir}/findbugs.html" >
+		    <sourcePath path="${project.dir}/${project.src}" />
+		    <class location="${project.dir}/${project.bin}/${project.classes}" />
+		</findbugs>
+	</target>
+	
+	<target name="compile" depends="checkoutSource" description="编译Java源码">
+	    <path id="buildpath" description="设置编译时需要用到的类的CLASSPATH，需要设置Java和Android和自己程序中引用的jar包">
+	    	<fileset dir="${java.home}">
+	        	<include name="lib/*.jar"/>
+	        </fileset>
+	        <fileset dir="${android.sdk.home}">
+	            <include name="platforms/android-17/*.jar"/>
+	        </fileset>
+	    	<fileset dir="${android.sdk.home}">
+	            <include name="${basedir}/${project.dir}/libs/*.jar"/>
+	        </fileset>
+	    </path>
+		<javac
+			srcdir="${project.dir}/${project.src}"
+			destdir="${project.dir}/${project.bin}/${project.classes}"
+			source="1.6"
+			target="1.6"
+			encoding="utf-8"
+			includeantruntime="false">
+			<classpath refid="buildpath"/>
+		</javac>
+	</target>
+		
+	<target name="checkoutSource" depends="prepare" description="从SVN服务器上检出最新代码">
+		<path id="svnant.classpath">
+	        <fileset dir="${basedir}">
+	            <include name="libs/svnant-1.3.1/lib/*.jar"/>
+	        </fileset>
+	    </path>
+		
+		<typedef
+			resource="org/tigris/subversion/svnant/svnantlib.xml"
+			classpathref="svnant.classpath"
+			description="SVNAnt自定义的任务映射表">
+		</typedef>
+		
+		<svnSetting
+			id="svn.setting" failonerror="true"
+			svnkit="true" javahl="false"
+			username="username" password="password"
+			description="设置svn相关属性" >
+		</svnSetting>
+		
+		<echo>Check out begain, please wait patiently!</echo>
+		
+		<svn refid="svn.setting">
+			<checkout 
+				url="${project_repository_url}" 
+		  		revision="HEAD" 
+		  		destPath="${project.dir}" >
+			</checkout>
+		</svn>
+		
+		<echo>Check out over!</echo>
+	</target>
+	
+	<target name="prepare" description="准备工作，创建文件夹">
+		<delete dir="${project.dir}"/>
+		<mkdir dir="${project.dir}"/>
+		<mkdir dir="${project.dir}/${project.bin}/${project.classes}"/>
+	</target>
+</project>
