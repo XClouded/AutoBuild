@@ -62,7 +62,7 @@
 	
 	<!-- 4、发邮件进行通知 -->
 	<target name="sendmail" depends="compile">
-		<exec executable="${basedir}/env.sh" failonerror="true"/>
+		<!-- 应该将libs/javamail-1.4.7/lib加入CLASSPATH中 -->
         <mail
 			from="${mail.from}"
             tolist="${mail.tolist}"
