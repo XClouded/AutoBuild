@@ -1,9 +1,15 @@
 <project name="autoBuild" default="main" basedir=".">
 	<property name="project.dir" value="${basedir}/project"/>
-	<property name="out.dir" value="out"/>
+	<property name="out.dir" value="bin"/>
 	
-	<property name="project_repository_url" value="http://192.168.1.24/pro/department/factory/project/trunk/DatatangForAndroid"/>
-	<property name="mail_to" value="792793182@qq.com, leleliu008@gmail.com" />	
+	<property name="project.repository.url" value="http://192.168.1.24/pro/department/factory/project/trunk/DatatangForAndroid"/>
+	<property name="project.repository.username" value="liufupin@datatang.com" />
+	<property name="project.repository.password" value="shujutang1508" />
+	
+	<property name="mail.from" value="792793182@qq.com" />
+	<property name="mail.username" value="792793182@qq.com" />
+	<property name="mail.password" value="" />
+	<property name="mail.tolist" value="792793182@qq.com, leleliu008@gmail.com" />
 	
 	<target name="main" depends="sendmail" description="构建脚本的入口"/>
 	
@@ -30,15 +36,17 @@
 		<svnSetting
 			id="svn.setting" failonerror="true"
 			svnkit="true" javahl="false"
-			username="username" password="password"
+			username="${project.repository.username}" 
+			password="${project.repository.password}"
 			description="设置svn相关属性" >
 		</svnSetting>
 		
 		<echo>Check out begain, please wait patiently!</echo>
+		<echo>project.repository.url = ${project.repository.url}</echo>
 		
 		<svn refid="svn.setting">
 			<checkout 
-				url="${project_repository_url}" 
+				url="${project.repository.url}" 
 		  		revision="HEAD" 
 		  		destPath="${project.dir}" >
 			</checkout>
@@ -54,18 +62,18 @@
 	
 	<!-- 4、发邮件进行通知 -->
 	<target name="sendmail" depends="compile">
-		<!-- 必须先将${basedir}/libs/javamail-1.4.7/mail.jar加入CLASSPATH环境变量中-->
+		<exec executable="${basedir}/env.sh" failonerror="true"/>
         <mail
-			from="792793182@qq.com"
-            tolist="${mail_to}"
-            mailhost="smtp.qq.com"
-            user="username"
-            password="password"
-            subject="Daily build"
-            message="mail content"
+			from="${mail.from}"
+            tolist="${mail.tolist}"
+            mailhost="mail.qq.com"
+            user="${mail.username}"
+            password="${mai.password}"
+            subject="每日构建"
+            message="每日构建完成"
 			messagemimetype="text/html">
             <fileset
-            	dir="${basedir}/${out.dir}"
+            	dir="${project.dir}/${out.dir}"
             	erroronmissingdir="false"
             	description="附件列表">
             	<include name="*.*"/>
